@@ -1,4 +1,4 @@
-FROM golang:1.15.3-alpine3.12
+FROM golang:1.16-alpine
 
 RUN apk add ca-certificates
 
@@ -11,9 +11,6 @@ WORKDIR /go/src/github.com/pierre-emmanuelJ/iptv-proxy
 COPY . .
 RUN GO111MODULE=off CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o iptv-proxy .
 
-# Expose Port
-EXPOSE 9000
-
-FROM alpine:3.11.6
+FROM alpine:3
 COPY --from=0  /go/src/github.com/pierre-emmanuelJ/iptv-proxy/iptv-proxy /
 ENTRYPOINT ["/iptv-proxy"]

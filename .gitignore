@@ -16,4 +16,5 @@
 iptv-proxy
 iptv/iptv.m3u
 
-
+#Development Directory.
+.vscode
