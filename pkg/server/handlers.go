@@ -88,14 +88,54 @@ func (c *Config) stream(ctx *gin.Context, oriURL *url.URL) {
 	})
 }
 
+func (c *Config) streamclient(ctx *gin.Context, oriURL *url.URL) {
+	ctx.Redirect(http.StatusFound, oriURL.String())
+}
+
 func (c *Config) xtreamStream(ctx *gin.Context, oriURL *url.URL) {
-	id := ctx.Param("id")
-	if strings.HasSuffix(id, ".m3u8") {
-		c.hlsXtreamStream(ctx, oriURL)
+
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	req, err := http.NewRequest("GET", oriURL.String(), nil)
+	if err != nil {
+		ctx.AbortWithError(http.StatusInternalServerError, err) // nolint: errcheck
 		return
 	}
 
-	c.stream(ctx, oriURL)
+	mergeHttpHeader(req.Header, ctx.Request.Header)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		ctx.AbortWithError(http.StatusInternalServerError, err) // nolint: errcheck
+		return
+	}
+	defer resp.Body.Close()
+
+	location, err := resp.Location()
+	if location != nil {
+		if !strings.Contains(location.String(), (fmt.Sprintf("/%s/%s", c.XtreamUser, c.XtreamPassword))) {
+			c.streamclient(ctx, location)
+		} else {
+			id := ctx.Param("id")
+			if strings.HasSuffix(id, ".m3u8") {
+				c.hlsXtreamStream(ctx, oriURL)
+			}
+
+			c.stream(ctx, oriURL)
+		}
+	} else {
+		id := ctx.Param("id")
+		if strings.HasSuffix(id, ".m3u8") {
+			c.hlsXtreamStream(ctx, oriURL)
+			return
+		}
+
+		c.stream(ctx, oriURL)
+	}
 }
 
 type values []string
