@@ -91,7 +91,7 @@ func (c *Config) cacheXtreamM3u(ctx *gin.Context) error {
 				track.Tags = append(track.Tags, tag)
 			}
 			playlist.Tracks = append(playlist.Tracks, *track)
-			playlist.Tracks[len(playlist.Tracks)-1].URI = fmt.Sprintf("%s/%s/%s/%s", c.XtreamBaseURL, c.XtreamUser, c.XtreamPassword, fmt.Sprint(stream.ID))
+			playlist.Tracks[len(playlist.Tracks)-1].URI = fmt.Sprintf("%s/live/%s/%s/%s.ts", c.XtreamBaseURL, c.XtreamUser, c.XtreamPassword, fmt.Sprint(stream.ID))
 		}
 		time.Sleep(1 * time.Second)
 	}
